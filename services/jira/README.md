@@ -1,6 +1,7 @@
-# jira (legado — basic auth)
-- **Auth:** básica (`-u "$JIRA_USER:$JIRA_PASS"`)
-- **Env vars:** `JIRA_BASE_URL`, `JIRA_USER`, `JIRA_PASS`
+# jira (legado — basic auth via SSO Nexxera)
+- **Auth:** básica com as credenciais do **SSO Nexxera** (`-u "$SSO_NEXXERA_LOGIN:$SSO_NEXXERA_PASS"`)
+- **Env vars:** `JIRA_BASE_URL`, `SSO_NEXXERA_LOGIN`, `SSO_NEXXERA_PASS`
+- **Nota:** `SSO_NEXXERA_*` são compartilhadas — qualquer outro serviço atrás do mesmo SSO reutiliza essas mesmas envs.
 - **Docs:** REST API (Server/DC): <https://docs.atlassian.com/software/jira/docs/api/REST/latest/> · JQL: <https://support.atlassian.com/jira-service-management-cloud/docs/use-advanced-search-with-jira-query-language-jql/>
 
 > Antes de qualquer curl numa sessão já aberta:
@@ -9,7 +10,7 @@
 
 ## Leitura
 ```bash
-A=(-u "$JIRA_USER:$JIRA_PASS"); B="$JIRA_BASE_URL/rest/api/2"
+A=(-u "$SSO_NEXXERA_LOGIN:$SSO_NEXXERA_PASS"); B="$JIRA_BASE_URL/rest/api/2"
 
 curl -s "${A[@]}" "$B/myself"                                  # usuário autenticado
 curl -s "${A[@]}" "$B/issue/<KEY>"                             # uma issue
