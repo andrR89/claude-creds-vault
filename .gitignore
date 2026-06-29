@@ -1,0 +1,5 @@
+# Nenhum segredo em texto puro deve entrar no git.
+# A fonte da verdade é o Bitwarden Secrets Manager — nada de segredo no repo.
+secrets.env
+*.env
+bws-token
