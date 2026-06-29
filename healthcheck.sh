@@ -16,7 +16,12 @@ for chk in "$HERE"/services/*/check.sh; do
   [ -f "$chk" ] || continue
   case "$chk" in */_*/check.sh) continue ;; esac   # ignora _TEMPLATE e afins
   out="$(bash "$chk" 2>&1)"; echo "$out"
-  echo "$out" | grep -q ' 200' || fail=1
+  # falha se QUALQUER linha com código HTTP não for 200 (cobre serviços multi-linha, ex. gemini)
+  while IFS= read -r line; do
+    code="$(printf '%s' "$line" | grep -oE '[0-9]{3}' | tail -1)"
+    [ -n "$code" ] || continue
+    [ "$code" = "200" ] || fail=1
+  done <<< "$out"
 done
 [ "$fail" = 0 ] && echo "✅ todos OK" || echo "❌ algum serviço falhou"
 exit $fail
