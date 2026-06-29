@@ -52,6 +52,7 @@ claude-creds-vault/
 #   ~/.config/claude-creds/bws-token     ← access token da machine account (chmod 600)
 #   ~/.config/claude-creds/secrets.env   ← ESPELHO RUNTIME (chmod 600), source ao vivo
 #   ~/.config/claude-creds/managed-keys  ← marker: chaves que o bootstrap gerencia
+#   ~/.claude/CLAUDE.md                  ← PONTE: bloco gerenciado que anuncia os serviços ao Claude
 ```
 
 **Núcleo (escreve uma vez, nunca mexe):** `bootstrap.sh`, `refresh.sh`, `healthcheck.sh`.
@@ -104,6 +105,16 @@ chmod 600 ~/.config/claude-creds/bws-token
 **Diagnóstico se o `bootstrap` gravar `0 variáveis`:** o token autentica mas não
 vê segredos. Cheque `bws project list` e `bws secret list` — provável falta de
 acesso **read** da machine account ao projeto, ou token de outra org.
+
+### Ponte automática p/ o Claude (gerada pelo bootstrap)
+
+O `bootstrap.sh` **também** mantém um bloco gerenciado no `~/.claude/CLAUDE.md`
+global (entre marcadores `<!-- BEGIN/END claude-creds-vault -->`), montado a partir
+dos `services/*/README.md` (linhas `**Auth:**` e `**Env vars:**`). Assim, em
+**qualquer** sessão/projeto, o Claude sabe que tem acesso aos serviços — sem
+precisar inspecionar o ambiente. É **idempotente** (substitui o bloco, não duplica)
+e **preserva** o resto do seu CLAUDE.md global. Adicionou um serviço novo? O
+próximo `bootstrap`/`refresh` atualiza a ponte sozinho.
 
 ---
 

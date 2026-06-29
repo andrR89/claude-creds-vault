@@ -55,4 +55,65 @@ PY
 RUNTIME_DIR="$HOME/.config/claude-creds"; mkdir -p "$RUNTIME_DIR"
 install -m 600 "$TMP" "$RUNTIME_DIR/secrets.env"
 echo "✅ Espelho runtime: $RUNTIME_DIR/secrets.env (chmod 600)"
+
+# ── ponte p/ o Claude: anuncia os serviços disponíveis no CLAUDE.md global ──
+# Bloco gerenciado (entre marcadores) montado a partir dos services/*/README.md.
+# Assim o Claude, em QUALQUER sessão/projeto, sabe que tem acesso — sem precisar
+# checar o ambiente. Adicionou serviço → a ponte se atualiza no próximo bootstrap.
+GLOBAL_MD="$HOME/.claude/CLAUDE.md"
+python3 - "$HERE" "$GLOBAL_MD" <<'PY'
+import os, re, sys, glob
+here, md = sys.argv[1], sys.argv[2]
+BEGIN = "<!-- BEGIN claude-creds-vault (auto-gerado por bootstrap.sh — não edite à mão) -->"
+END   = "<!-- END claude-creds-vault -->"
+
+rows = []
+for rd in sorted(glob.glob(os.path.join(here, "services", "*", "README.md"))):
+    svc = os.path.basename(os.path.dirname(rd))
+    if svc.startswith("_"):
+        continue
+    auth = envs = ""
+    for line in open(rd, encoding="utf-8"):
+        s = line.strip()
+        m = re.match(r'-\s*\*\*Auth:\*\*\s*(.+)', s)
+        if m: auth = m.group(1).strip()
+        m = re.match(r'-\s*\*\*Env vars:\*\*\s*(.+)', s)
+        if m: envs = m.group(1).strip()
+    rows.append((svc, auth, envs))
+
+L = [BEGIN,
+     "# Credenciais disponíveis (claude-creds-vault)",
+     "",
+     "Você TEM acesso aos serviços abaixo via env vars já injetadas no seu ambiente",
+     "(bloco `env` do settings.json). Quando o usuário pedir algo de um desses",
+     "serviços, **use** — não diga que não tem acesso.",
+     "",
+     "| Serviço | Auth | Env vars |",
+     "|---|---|---|"]
+for svc, auth, envs in rows:
+    L.append(f"| **{svc}** | {auth or '—'} | {envs or '—'} |")
+L += ["",
+      "**Regra de ouro — sempre o valor atual:** antes do curl, carregue o espelho",
+      "runtime (pega rotações sem reiniciar a sessão):",
+      "",
+      "```bash",
+      "set -a; source ~/.config/claude-creds/secrets.env; set +a",
+      "```",
+      "",
+      f"- **Receitas completas** (leitura/escrita por serviço): `{here}/services/<id>/README.md`.",
+      "- **Operações de escrita alteram dados reais** — confirme com o usuário antes.",
+      "- **Nunca** imprima segredos no chat; ao testar, mostre só o status HTTP.",
+      f"- Gerenciar o cofre (adicionar serviço, rotação): `{here}/CLAUDE.md`.",
+      END]
+block = "\n".join(L)
+
+old = open(md, encoding="utf-8").read() if os.path.exists(md) else ""
+pat = re.compile(re.escape(BEGIN) + r".*?" + re.escape(END), re.DOTALL)
+new = pat.sub(lambda _: block, old) if pat.search(old) else \
+      ((old.rstrip() + "\n\n" + block + "\n") if old.strip() else block + "\n")
+os.makedirs(os.path.dirname(md), exist_ok=True)
+open(md, "w", encoding="utf-8").write(new)
+print(f"✅ Ponte p/ o Claude: {md} ({len(rows)} serviços anunciados)")
+PY
+
 echo "✅ Pronto. Sessões NOVAS pegam via settings.json; sessões ABERTAS pegam dando source no espelho runtime."
