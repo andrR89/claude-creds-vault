@@ -20,17 +20,35 @@ bws secret list --output env > "$TMP"   # emite KEY=VALUE de todos os segredos d
 
 mkdir -p "$HOME/.claude"; [ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
 
-python3 - "$SETTINGS" "$TMP" <<'PY'
-import json, re, sys
-sp, ep = sys.argv[1], sys.argv[2]
-data = json.load(open(sp)); env = data.setdefault("env", {}); n = 0
+MANAGED="$HOME/.config/claude-creds/managed-keys"
+python3 - "$SETTINGS" "$TMP" "$MANAGED" <<'PY'
+import json, re, sys, os
+sp, ep, mp = sys.argv[1], sys.argv[2], sys.argv[3]
+data = json.load(open(sp)); env = data.setdefault("env", {})
+
+# chaves que vêm do vault AGORA
+incoming = {}
 for line in open(ep):
     line = line.strip()
     if not line or line.startswith("#") or "=" not in line: continue
     k, v = re.sub(r'^export\s+', '', line).split("=", 1)
-    env[k.strip()] = v.strip().strip('"').strip("'"); n += 1
+    incoming[k.strip()] = v.strip().strip('"').strip("'")
+
+# chaves que o vault gravou da última vez (marker) — só removemos o que ELE gerenciava
+prev = {l.strip() for l in open(mp)} if os.path.exists(mp) else set()
+removed = [k for k in prev if k not in incoming and k in env]
+for k in removed: env.pop(k, None)
+
+# injeta/atualiza as atuais
+for k, v in incoming.items(): env[k] = v
+
 json.dump(data, open(sp, "w"), indent=2); open(sp, "a").write("\n")
-print(f"✅ {n} variáveis gravadas em {sp}")
+os.makedirs(os.path.dirname(mp), exist_ok=True)
+open(mp, "w").write("\n".join(sorted(incoming)) + "\n")   # atualiza o marker
+
+msg = f"✅ {len(incoming)} variáveis gravadas em {sp}"
+if removed: msg += f"; {len(removed)} órfã(s) removida(s): {', '.join(removed)}"
+print(msg)
 PY
 
 # espelho runtime — leitura AO VIVO (sempre o valor atual, pega rotação na hora)
