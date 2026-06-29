@@ -2,6 +2,7 @@
 - **Auth:** header `Authorization: $CLICKUP_API_KEY` (token pessoal, **sem** "Bearer")
 - **Env vars:** `CLICKUP_API_KEY`
 - **Base URL:** `https://api.clickup.com/api/v2` (pública/fixa, não é segredo)
+- **Docs:** API reference: <https://developer.clickup.com/reference/> · autenticação: <https://developer.clickup.com/docs/authentication>
 
 ## Receitas (para o Claude usar)
 ```bash

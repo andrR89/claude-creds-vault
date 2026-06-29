@@ -1,6 +1,7 @@
 # jira (legado — basic auth)
 - **Auth:** básica (`-u "$JIRA_USER:$JIRA_PASS"`)
 - **Env vars:** `JIRA_BASE_URL`, `JIRA_USER`, `JIRA_PASS`
+- **Docs:** REST API (Server/DC): <https://docs.atlassian.com/software/jira/docs/api/REST/latest/> · JQL: <https://support.atlassian.com/jira-service-management-cloud/docs/use-advanced-search-with-jira-query-language-jql/>
 
 ## Receitas
 ```bash

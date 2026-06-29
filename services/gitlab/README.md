@@ -1,6 +1,7 @@
 # gitlab (token)
 - **Auth:** header `PRIVATE-TOKEN: $GITLAB_TOKEN`
 - **Env vars:** `GITLAB_BASE_URL`, `GITLAB_TOKEN`
+- **Docs:** REST API: <https://docs.gitlab.com/ee/api/rest/> · índice de endpoints: <https://docs.gitlab.com/ee/api/api_resources.html>
 
 ## Receitas
 ```bash
