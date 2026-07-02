@@ -54,6 +54,8 @@ claude-creds-vault/
 #   ~/.config/claude-creds/managed-keys  ← marker: chaves que o bootstrap gerencia
 #   ~/.claude/CLAUDE.md                  ← PONTE: bloco gerenciado que anuncia os serviços ao Claude
 #   ~/.gemini/GEMINI.md + ~/.gemini/.env ← idem p/ Gemini CLI (só se instalado; .env é symlink do espelho)
+#   ~/.config/opencode/AGENTS.md         ← idem p/ OpenCode (só se instalado)
+#   ~/.kilocode/rules/creds-vault.md     ← idem p/ Kilo Code (só se instalado)
 ```
 
 **Núcleo (escreve uma vez, nunca mexe):** `bootstrap.sh`, `refresh.sh`, `healthcheck.sh`.
@@ -117,11 +119,19 @@ precisar inspecionar o ambiente. É **idempotente** (substitui o bloco, não dup
 e **preserva** o resto do seu CLAUDE.md global. Adicionou um serviço novo? O
 próximo `bootstrap`/`refresh` atualiza a ponte sozinho.
 
-**Gemini CLI (opcional):** se o `gemini` estiver no PATH (ou `~/.gemini/` existir),
-o bootstrap também (1) cria o symlink `~/.gemini/.env` → espelho runtime (o Gemini
-carrega esse .env sozinho; rotação pega junto; um `.env` próprio pré-existente é
-preservado) e (2) mantém o mesmo bloco gerenciado em `~/.gemini/GEMINI.md`, com a
-instrução de nunca assinar commits/PRs como IA. Máquina sem Gemini: nada acontece.
+**Outras ferramentas (opcional):** a mesma ponte é replicada para cada ferramenta
+detectada na máquina — quem não estiver instalada não ganha nada:
+
+| Ferramenta | Detecção | Ponte | Env vars |
+|---|---|---|---|
+| **Gemini CLI** | `gemini` no PATH ou `~/.gemini/` | `~/.gemini/GEMINI.md` | symlink `~/.gemini/.env` → espelho runtime (um `.env` próprio pré-existente é preservado) |
+| **OpenCode** | `opencode` no PATH ou `~/.config/opencode/` | `~/.config/opencode/AGENTS.md` | herda do shell; a ponte instrui o `source` do espelho |
+| **Kilo Code** | `~/.kilocode/` ou extensão `kilocode.*` no VS Code | `~/.kilocode/rules/creds-vault.md` | herda do shell; a ponte instrui o `source` do espelho |
+
+Nas pontes não-Claude o bloco inclui a instrução de **nunca assinar commits/PRs
+como IA** (no Claude isso é resolvido pelo `attribution` do settings.json, que o
+bootstrap também garante). Adicionar suporte a outra ferramenta = 1 chamada de
+`write_bridge` + um `if` de detecção no `bootstrap.sh`.
 
 ---
 

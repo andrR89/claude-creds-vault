@@ -89,13 +89,15 @@ for rd in sorted(glob.glob(os.path.join(here, "services", "*", "README.md"))):
         if m: envs = m.group(1).strip()
     rows.append((svc, auth, envs))
 
-inject = "(bloco `env` do settings.json do Claude)." if flavor == "claude" else \
-         "(carregadas do `~/.gemini/.env`, symlink do espelho runtime)."
+inject = {
+    "claude": "já injetadas no seu ambiente (bloco `env` do settings.json do Claude).",
+    "gemini": "já injetadas no seu ambiente (carregadas do `~/.gemini/.env`, symlink do espelho runtime).",
+}.get(flavor, "obtidas na hora via `source` do espelho runtime (regra de ouro abaixo).")
 L = [BEGIN,
      "# Credenciais disponíveis (claude-creds-vault)",
      "",
-     "Você TEM acesso aos serviços abaixo via env vars já injetadas no seu ambiente",
-     inject + " Quando o usuário pedir algo de um desses",
+     "Você TEM acesso aos serviços abaixo via env vars " + inject,
+     "Quando o usuário pedir algo de um desses",
      "serviços, **use** — não diga que não tem acesso.",
      "",
      "| Serviço | Auth | Env vars |",
@@ -115,7 +117,7 @@ L += ["",
       "- **Nunca** imprima segredos no chat; ao testar, mostre só o status HTTP.",
       f"- Gerenciar o cofre (adicionar serviço, rotação): `{here}/CLAUDE.md`.",
       END]
-if flavor == "gemini":
+if flavor != "claude":  # no Claude isso é resolvido via settings.json (attribution)
     L.insert(-1, "- **Nunca** inclua assinaturas de IA em commits/PRs (nada de "
                  "\"Generated with…\", `Co-Authored-By` de IA ou similares).")
 block = "\n".join(L)
@@ -146,6 +148,17 @@ if command -v gemini >/dev/null 2>&1 || [ -d "$HOME/.gemini" ]; then
     echo "⚠️  Gemini: $GENV já existe (arquivo próprio) — não sobrescrevi; se quiser as credenciais lá, aponte-o p/ $RUNTIME_DIR/secrets.env"
   fi
   write_bridge "$HOME/.gemini/GEMINI.md" gemini
+fi
+
+# ── OpenCode (opcional): lê o AGENTS.md global de ~/.config/opencode/ ──
+# Env herda do shell; a ponte instrui o source do espelho antes de cada curl.
+if command -v opencode >/dev/null 2>&1 || [ -d "$HOME/.config/opencode" ]; then
+  write_bridge "$HOME/.config/opencode/AGENTS.md" opencode
+fi
+
+# ── Kilo Code (opcional): extensão VS Code; regras globais em ~/.kilocode/rules/ ──
+if [ -d "$HOME/.kilocode" ] || ls "$HOME/.vscode/extensions"/kilocode.* >/dev/null 2>&1; then
+  write_bridge "$HOME/.kilocode/rules/creds-vault.md" kilocode
 fi
 
 echo "✅ Pronto. Sessões NOVAS pegam via settings.json/.env; sessões ABERTAS pegam dando source no espelho runtime."
