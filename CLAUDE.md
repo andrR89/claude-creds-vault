@@ -42,7 +42,7 @@ claude-creds-vault/
 ├── .gitignore         # bloqueia qualquer segredo em texto puro / token
 └── services/          # 1 pasta por serviço — é só soltar mais
     ├── _TEMPLATE/     # modelo p/ criar serviço novo (ignorado pelo healthcheck)
-    ├── jira/          # check.sh + README.md (auth + receitas de curl)
+    ├── jira/          # check.sh + README.md (auth + receitas) + env.required (opcional)
     ├── gitlab/
     ├── clickup/
     ├── gemini/
@@ -199,6 +199,16 @@ Um `check.sh` pode testar **todas** as env vars que casam um sufixo — útil qu
 o mesmo serviço tem várias chaves (pessoal, corporativa…). O `services/gemini/check.sh`
 itera sobre `compgen -A variable | grep -E 'GEMINI_API_KEY$'` e imprime uma linha
 por chave; o healthcheck exige 200 em cada uma.
+
+### Desabilitar automático (`env.required`)
+
+Um serviço pode declarar em `services/<id>/env.required` as env vars que exige
+(1 por linha; `#` comenta; nome literal = var não-vazia; padrão com `*` = pelo
+menos uma var casando o glob, ex. `KIBANA_BASE_URL_*`; todas as linhas são
+exigidas). Se algo faltar — ex.: máquina cujo token do Bitwarden não enxerga
+aquele secret — o serviço é **desabilitado por completo**: o `healthcheck` pula
+(mostra `desabilitado (falta X)`, sem falhar) e as pontes deixam de anunciá-lo
+ao agente. Sem o arquivo (ou com erro de leitura), o serviço fica sempre ativo.
 
 ### Auth compartilhada (ex.: SSO Nexxera)
 
