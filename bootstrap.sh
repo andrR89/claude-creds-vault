@@ -70,7 +70,7 @@ echo "✅ Espelho runtime: $RUNTIME_DIR/secrets.env (chmod 600)"
 # Claude Code: ~/.claude/CLAUDE.md · Gemini CLI/Antigravity: ~/.gemini/GEMINI.md (se instalados).
 write_bridge() {  # $1 = arquivo de contexto global, $2 = flavor (claude|gemini)
 python3 - "$HERE" "$1" "$2" <<'PY'
-import os, re, sys, glob
+import os, re, sys, glob, fnmatch
 here, md, flavor = sys.argv[1], sys.argv[2], sys.argv[3]
 BEGIN = "<!-- BEGIN claude-creds-vault (auto-gerado por bootstrap.sh — não edite à mão) -->"
 END   = "<!-- END claude-creds-vault -->"
@@ -88,6 +88,35 @@ for rd in sorted(glob.glob(os.path.join(here, "services", "*", "README.md"))):
         m = re.match(r'-\s*\*\*Env vars:\*\*\s*(.+)', s)
         if m: envs = m.group(1).strip()
     rows.append((svc, auth, envs))
+
+# ── env.required: omite da ponte serviço cujas vars não estão no espelho ──
+# Chaves disponíveis = linhas KEY=... com valor não-vazio no espelho runtime.
+env_file = os.path.join(os.path.expanduser("~"), ".config", "claude-creds", "secrets.env")
+keys = set()
+try:
+    for line in open(env_file, encoding="utf-8"):
+        m = re.match(r'([A-Za-z_][A-Za-z0-9_]*)=(.*)', line.strip())
+        if m and m.group(2).strip().strip('"').strip("'"):
+            keys.add(m.group(1))
+except OSError:
+    keys = None  # espelho ilegível → não desabilita ninguém
+
+def first_missing(svc):  # → entrada não satisfeita ou None (erro de leitura = ativo)
+    req = os.path.join(here, "services", svc, "env.required")
+    if keys is None or not os.path.isfile(req):
+        return None
+    try:
+        for raw in open(req, encoding="utf-8"):
+            entry = raw.split("#", 1)[0].strip()
+            if entry and not fnmatch.filter(keys, entry):
+                return entry
+    except OSError:
+        return None
+    return None
+
+off = [(svc, first_missing(svc)) for svc, _, _ in rows]
+off = [(svc, miss) for svc, miss in off if miss]
+rows = [r for r in rows if r[0] not in {svc for svc, _ in off}]
 
 inject = {
     "claude": "já injetadas no seu ambiente (bloco `env` do settings.json do Claude).",
@@ -128,7 +157,8 @@ new = pat.sub(lambda _: block, old) if pat.search(old) else \
       ((old.rstrip() + "\n\n" + block + "\n") if old.strip() else block + "\n")
 os.makedirs(os.path.dirname(md), exist_ok=True)
 open(md, "w", encoding="utf-8").write(new)
-print(f"✅ Ponte p/ o agente ({flavor}): {md} ({len(rows)} serviços anunciados)")
+extra = f", {len(off)} desabilitado(s): {', '.join(svc for svc, _ in off)}" if off else ""
+print(f"✅ Ponte p/ o agente ({flavor}): {md} ({len(rows)} serviços anunciados{extra})")
 PY
 }
 
