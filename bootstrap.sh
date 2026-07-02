@@ -67,7 +67,7 @@ echo "✅ Espelho runtime: $RUNTIME_DIR/secrets.env (chmod 600)"
 # Bloco gerenciado (entre marcadores) montado a partir dos services/*/README.md.
 # Assim o agente, em QUALQUER sessão/projeto, sabe que tem acesso — sem precisar
 # checar o ambiente. Adicionou serviço → a ponte se atualiza no próximo bootstrap.
-# Claude Code: ~/.claude/CLAUDE.md · Gemini CLI: ~/.gemini/GEMINI.md (se instalado).
+# Claude Code: ~/.claude/CLAUDE.md · Gemini CLI/Antigravity: ~/.gemini/GEMINI.md (se instalados).
 write_bridge() {  # $1 = arquivo de contexto global, $2 = flavor (claude|gemini)
 python3 - "$HERE" "$1" "$2" <<'PY'
 import os, re, sys, glob
@@ -134,18 +134,20 @@ PY
 
 write_bridge "$HOME/.claude/CLAUDE.md" claude
 
-# ── Gemini CLI (opcional): mesmo vault, mesma ponte ──
-# Só age se o Gemini existir na máquina (binário no PATH ou ~/.gemini/ presente).
+# ── Gemini CLI / Antigravity CLI (opcional): mesmo vault, mesma ponte ──
+# Ambos usam ~/.gemini/ como config — uma ponte serve os dois (validado: o agy
+# lê o GEMINI.md como regra global e faz os curls sozinho). Só age se algum
+# existir na máquina (gemini/agy no PATH ou ~/.gemini/ presente).
 # Env vars: o Gemini carrega ~/.gemini/.env sozinho → symlink p/ o espelho runtime
 # (mesma fonte, rotação pega junto). Contexto: mesmo bloco gerenciado no GEMINI.md.
-if command -v gemini >/dev/null 2>&1 || [ -d "$HOME/.gemini" ]; then
+if command -v gemini >/dev/null 2>&1 || command -v agy >/dev/null 2>&1 || [ -d "$HOME/.gemini" ]; then
   mkdir -p "$HOME/.gemini"
   GENV="$HOME/.gemini/.env"
   if [ -L "$GENV" ] || [ ! -e "$GENV" ]; then
     ln -sfn "$RUNTIME_DIR/secrets.env" "$GENV"
-    echo "✅ Gemini: $GENV → symlink p/ o espelho runtime"
+    echo "✅ Gemini/Antigravity: $GENV → symlink p/ o espelho runtime"
   else
-    echo "⚠️  Gemini: $GENV já existe (arquivo próprio) — não sobrescrevi; se quiser as credenciais lá, aponte-o p/ $RUNTIME_DIR/secrets.env"
+    echo "⚠️  Gemini/Antigravity: $GENV já existe (arquivo próprio) — não sobrescrevi; se quiser as credenciais lá, aponte-o p/ $RUNTIME_DIR/secrets.env"
   fi
   write_bridge "$HOME/.gemini/GEMINI.md" gemini
 fi

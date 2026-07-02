@@ -53,7 +53,7 @@ claude-creds-vault/
 #   ~/.config/claude-creds/secrets.env   ← ESPELHO RUNTIME (chmod 600), source ao vivo
 #   ~/.config/claude-creds/managed-keys  ← marker: chaves que o bootstrap gerencia
 #   ~/.claude/CLAUDE.md                  ← PONTE: bloco gerenciado que anuncia os serviços ao Claude
-#   ~/.gemini/GEMINI.md + ~/.gemini/.env ← idem p/ Gemini CLI (só se instalado; .env é symlink do espelho)
+#   ~/.gemini/GEMINI.md + ~/.gemini/.env ← idem p/ Gemini CLI e Antigravity CLI (só se instalados; .env é symlink do espelho)
 #   ~/.config/opencode/AGENTS.md         ← idem p/ OpenCode (só se instalado)
 #   ~/.kilocode/rules/creds-vault.md     ← idem p/ Kilo Code (só se instalado)
 ```
@@ -124,7 +124,7 @@ detectada na máquina — quem não estiver instalada não ganha nada:
 
 | Ferramenta | Detecção | Ponte | Env vars |
 |---|---|---|---|
-| **Gemini CLI** | `gemini` no PATH ou `~/.gemini/` | `~/.gemini/GEMINI.md` | symlink `~/.gemini/.env` → espelho runtime (um `.env` próprio pré-existente é preservado) |
+| **Gemini CLI / Antigravity CLI** | `gemini` ou `agy` no PATH, ou `~/.gemini/` | `~/.gemini/GEMINI.md` (os dois usam `~/.gemini/` — uma ponte serve ambos) | symlink `~/.gemini/.env` → espelho runtime (um `.env` próprio pré-existente é preservado) |
 | **OpenCode** | `opencode` no PATH ou `~/.config/opencode/` | `~/.config/opencode/AGENTS.md` | herda do shell; a ponte instrui o `source` do espelho |
 | **Kilo Code** | `~/.kilocode/` ou extensão `kilocode.*` no VS Code | `~/.kilocode/rules/creds-vault.md` | herda do shell; a ponte instrui o `source` do espelho |
 
