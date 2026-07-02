@@ -53,6 +53,7 @@ claude-creds-vault/
 #   ~/.config/claude-creds/secrets.env   ← ESPELHO RUNTIME (chmod 600), source ao vivo
 #   ~/.config/claude-creds/managed-keys  ← marker: chaves que o bootstrap gerencia
 #   ~/.claude/CLAUDE.md                  ← PONTE: bloco gerenciado que anuncia os serviços ao Claude
+#   ~/.gemini/GEMINI.md + ~/.gemini/.env ← idem p/ Gemini CLI (só se instalado; .env é symlink do espelho)
 ```
 
 **Núcleo (escreve uma vez, nunca mexe):** `bootstrap.sh`, `refresh.sh`, `healthcheck.sh`.
@@ -115,6 +116,12 @@ dos `services/*/README.md` (linhas `**Auth:**` e `**Env vars:**`). Assim, em
 precisar inspecionar o ambiente. É **idempotente** (substitui o bloco, não duplica)
 e **preserva** o resto do seu CLAUDE.md global. Adicionou um serviço novo? O
 próximo `bootstrap`/`refresh` atualiza a ponte sozinho.
+
+**Gemini CLI (opcional):** se o `gemini` estiver no PATH (ou `~/.gemini/` existir),
+o bootstrap também (1) cria o symlink `~/.gemini/.env` → espelho runtime (o Gemini
+carrega esse .env sozinho; rotação pega junto; um `.env` próprio pré-existente é
+preservado) e (2) mantém o mesmo bloco gerenciado em `~/.gemini/GEMINI.md`, com a
+instrução de nunca assinar commits/PRs como IA. Máquina sem Gemini: nada acontece.
 
 ---
 

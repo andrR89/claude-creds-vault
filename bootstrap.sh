@@ -63,14 +63,15 @@ RUNTIME_DIR="$HOME/.config/claude-creds"; mkdir -p "$RUNTIME_DIR"
 install -m 600 "$TMP" "$RUNTIME_DIR/secrets.env"
 echo "✅ Espelho runtime: $RUNTIME_DIR/secrets.env (chmod 600)"
 
-# ── ponte p/ o Claude: anuncia os serviços disponíveis no CLAUDE.md global ──
+# ── ponte p/ os agentes: anuncia os serviços no arquivo de contexto global ──
 # Bloco gerenciado (entre marcadores) montado a partir dos services/*/README.md.
-# Assim o Claude, em QUALQUER sessão/projeto, sabe que tem acesso — sem precisar
+# Assim o agente, em QUALQUER sessão/projeto, sabe que tem acesso — sem precisar
 # checar o ambiente. Adicionou serviço → a ponte se atualiza no próximo bootstrap.
-GLOBAL_MD="$HOME/.claude/CLAUDE.md"
-python3 - "$HERE" "$GLOBAL_MD" <<'PY'
+# Claude Code: ~/.claude/CLAUDE.md · Gemini CLI: ~/.gemini/GEMINI.md (se instalado).
+write_bridge() {  # $1 = arquivo de contexto global, $2 = flavor (claude|gemini)
+python3 - "$HERE" "$1" "$2" <<'PY'
 import os, re, sys, glob
-here, md = sys.argv[1], sys.argv[2]
+here, md, flavor = sys.argv[1], sys.argv[2], sys.argv[3]
 BEGIN = "<!-- BEGIN claude-creds-vault (auto-gerado por bootstrap.sh — não edite à mão) -->"
 END   = "<!-- END claude-creds-vault -->"
 
@@ -88,11 +89,13 @@ for rd in sorted(glob.glob(os.path.join(here, "services", "*", "README.md"))):
         if m: envs = m.group(1).strip()
     rows.append((svc, auth, envs))
 
+inject = "(bloco `env` do settings.json do Claude)." if flavor == "claude" else \
+         "(carregadas do `~/.gemini/.env`, symlink do espelho runtime)."
 L = [BEGIN,
      "# Credenciais disponíveis (claude-creds-vault)",
      "",
      "Você TEM acesso aos serviços abaixo via env vars já injetadas no seu ambiente",
-     "(bloco `env` do settings.json). Quando o usuário pedir algo de um desses",
+     inject + " Quando o usuário pedir algo de um desses",
      "serviços, **use** — não diga que não tem acesso.",
      "",
      "| Serviço | Auth | Env vars |",
@@ -112,6 +115,9 @@ L += ["",
       "- **Nunca** imprima segredos no chat; ao testar, mostre só o status HTTP.",
       f"- Gerenciar o cofre (adicionar serviço, rotação): `{here}/CLAUDE.md`.",
       END]
+if flavor == "gemini":
+    L.insert(-1, "- **Nunca** inclua assinaturas de IA em commits/PRs (nada de "
+                 "\"Generated with…\", `Co-Authored-By` de IA ou similares).")
 block = "\n".join(L)
 
 old = open(md, encoding="utf-8").read() if os.path.exists(md) else ""
@@ -120,7 +126,26 @@ new = pat.sub(lambda _: block, old) if pat.search(old) else \
       ((old.rstrip() + "\n\n" + block + "\n") if old.strip() else block + "\n")
 os.makedirs(os.path.dirname(md), exist_ok=True)
 open(md, "w", encoding="utf-8").write(new)
-print(f"✅ Ponte p/ o Claude: {md} ({len(rows)} serviços anunciados)")
+print(f"✅ Ponte p/ o agente ({flavor}): {md} ({len(rows)} serviços anunciados)")
 PY
+}
 
-echo "✅ Pronto. Sessões NOVAS pegam via settings.json; sessões ABERTAS pegam dando source no espelho runtime."
+write_bridge "$HOME/.claude/CLAUDE.md" claude
+
+# ── Gemini CLI (opcional): mesmo vault, mesma ponte ──
+# Só age se o Gemini existir na máquina (binário no PATH ou ~/.gemini/ presente).
+# Env vars: o Gemini carrega ~/.gemini/.env sozinho → symlink p/ o espelho runtime
+# (mesma fonte, rotação pega junto). Contexto: mesmo bloco gerenciado no GEMINI.md.
+if command -v gemini >/dev/null 2>&1 || [ -d "$HOME/.gemini" ]; then
+  mkdir -p "$HOME/.gemini"
+  GENV="$HOME/.gemini/.env"
+  if [ -L "$GENV" ] || [ ! -e "$GENV" ]; then
+    ln -sfn "$RUNTIME_DIR/secrets.env" "$GENV"
+    echo "✅ Gemini: $GENV → symlink p/ o espelho runtime"
+  else
+    echo "⚠️  Gemini: $GENV já existe (arquivo próprio) — não sobrescrevi; se quiser as credenciais lá, aponte-o p/ $RUNTIME_DIR/secrets.env"
+  fi
+  write_bridge "$HOME/.gemini/GEMINI.md" gemini
+fi
+
+echo "✅ Pronto. Sessões NOVAS pegam via settings.json/.env; sessões ABERTAS pegam dando source no espelho runtime."
