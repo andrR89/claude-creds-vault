@@ -12,7 +12,8 @@ existem — se faltarem, oriente o usuário a rodar `/instalar`.
 ## 1. Refresh
 Rode `./refresh.sh`. Ele faz `git pull --ff-only` (pega código/serviços novos), re-busca
 os segredos no Bitwarden e re-executa o bootstrap — o que também **poda envs órfãs**
-(que você apagou no Bitwarden) e **atualiza a ponte** no `~/.claude/CLAUDE.md`.
+(que você apagou no Bitwarden) e **atualiza as pontes de contexto** das ferramentas
+detectadas (`~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md`, OpenCode, Kilo Code…).
 
 ## 2. Healthcheck
 Rode `./healthcheck.sh`. Reporte o status por serviço numa lista clara.
@@ -25,5 +26,5 @@ Rode `./healthcheck.sh`. Reporte o status por serviço numa lista clara.
 - Se o `bootstrap` removeu órfãs ou a ponte mudou (serviço novo), mencione.
 
 Lembre o usuário: rotação de credencial só precisa de `/atualizar`; serviço novo que
-mexa em `settings.json` pode pedir **reiniciar o Claude Code** para valer em sessões já
-abertas.
+mexa em `settings.json`/`.env` pode pedir **reiniciar a ferramenta** para valer em
+sessões já abertas (ou `source` no espelho runtime na sessão atual).

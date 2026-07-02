@@ -54,8 +54,9 @@ chmod 600 ~/.config/claude-creds/bws-token
 
 ## 4. Bootstrap
 Rode `./bootstrap.sh`. Ele busca os segredos no Bitwarden, injeta no bloco `env` do
-`~/.claude/settings.json`, cria o espelho runtime (600) e atualiza a ponte no
-`~/.claude/CLAUDE.md`. Se gravar **0 variáveis**, diagnostique: `bws project list` /
+`~/.claude/settings.json`, cria o espelho runtime (600) e atualiza as pontes de
+contexto das ferramentas detectadas na máquina (`~/.claude/CLAUDE.md`,
+`~/.gemini/GEMINI.md`, OpenCode, Kilo Code…). Se gravar **0 variáveis**, diagnostique: `bws project list` /
 `bws secret list` — provável falta de acesso read da machine account ao projeto.
 
 ## 5. Healthcheck
@@ -63,5 +64,7 @@ Rode `./healthcheck.sh` e reporte o status de cada serviço. Se algum não for 2
 explique brevemente o provável motivo (key inválida, sessão expirada, host inacessível).
 
 ## 6. Finalizar
-Avise o usuário para **reiniciar o Claude Code** — o bloco `env` do `settings.json` só
-vale em sessões novas. Resuma o que ficou pronto e o que (se algo) ficou pendente.
+Avise o usuário para **reiniciar a ferramenta** (Claude Code, Gemini CLI etc.) — env
+injetada via settings/.env só vale em sessões novas; sessões abertas pegam o valor
+atual dando `source` no espelho runtime. Resuma o que ficou pronto e o que (se algo)
+ficou pendente.

@@ -133,6 +133,12 @@ como IA** (no Claude isso é resolvido pelo `attribution` do settings.json, que 
 bootstrap também garante). Adicionar suporte a outra ferramenta = 1 chamada de
 `write_bridge` + um `if` de detecção no `bootstrap.sh`.
 
+**Slash commands multi-tool:** `/instalar` e `/atualizar` vivem em
+`.claude/commands/` (fonte única) e são espelhados por **symlink relativo** em
+`.opencode/commands/`, `.kilocode/workflows/` e `.agents/workflows/` (Antigravity)
+— editou o `.md` em `.claude/commands/`, valeu em todas. No Kilo invoca-se como
+`/instalar.md`; nas demais, `/instalar`.
+
 ---
 
 ## 🤖 Como o Claude deve chamar um serviço (sempre o valor atual)
