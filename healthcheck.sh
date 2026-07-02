@@ -14,6 +14,7 @@ set -a; source <(bws secret list --output env); set +a
 # ── env.required: serviço sem credencial é DESABILITADO (pulado), não falha ──
 # Sintaxe: 1 entrada por linha ('#' comenta); nome literal exige var não-vazia;
 # padrão com '*' (glob) exige pelo menos uma var casando. Sem arquivo → ativo.
+# (espelha first_missing() do bootstrap.sh — manter em sincronia)
 missing_req() {  # $1 = env.required → ecoa a 1ª entrada não satisfeita (nada se ok)
   local entry name found
   while IFS= read -r entry || [ -n "$entry" ]; do

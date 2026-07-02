@@ -95,12 +95,13 @@ env_file = os.path.join(os.path.expanduser("~"), ".config", "claude-creds", "sec
 keys = set()
 try:
     for line in open(env_file, encoding="utf-8"):
-        m = re.match(r'([A-Za-z_][A-Za-z0-9_]*)=(.*)', line.strip())
+        m = re.match(r'([A-Za-z_][A-Za-z0-9_]*)=(.*)', re.sub(r'^export\s+', '', line.strip()))
         if m and m.group(2).strip().strip('"').strip("'"):
             keys.add(m.group(1))
 except OSError:
     keys = None  # espelho ilegível → não desabilita ninguém
 
+# (espelha missing_req() do healthcheck.sh — manter em sincronia)
 def first_missing(svc):  # → entrada não satisfeita ou None (erro de leitura = ativo)
     req = os.path.join(here, "services", svc, "env.required")
     if keys is None or not os.path.isfile(req):
@@ -157,7 +158,7 @@ new = pat.sub(lambda _: block, old) if pat.search(old) else \
       ((old.rstrip() + "\n\n" + block + "\n") if old.strip() else block + "\n")
 os.makedirs(os.path.dirname(md), exist_ok=True)
 open(md, "w", encoding="utf-8").write(new)
-extra = f", {len(off)} desabilitado(s): {', '.join(svc for svc, _ in off)}" if off else ""
+extra = f", {len(off)} desabilitado(s): {', '.join(f'{svc} (falta {miss})' for svc, miss in off)}" if off else ""
 print(f"✅ Ponte p/ o agente ({flavor}): {md} ({len(rows)} serviços anunciados{extra})")
 PY
 }
