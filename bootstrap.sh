@@ -42,6 +42,13 @@ for k in removed: env.pop(k, None)
 # injeta/atualiza as atuais
 for k, v in incoming.items(): env[k] = v
 
+# sem assinaturas do Claude em commits/PRs (só preenche o que faltar — não
+# sobrescreve customização manual)
+att = data.setdefault("attribution", {})
+att.setdefault("commit", "")
+att.setdefault("pr", "")
+att.setdefault("sessionUrl", False)
+
 json.dump(data, open(sp, "w"), indent=2); open(sp, "a").write("\n")
 os.makedirs(os.path.dirname(mp), exist_ok=True)
 open(mp, "w").write("\n".join(sorted(incoming)) + "\n")   # atualiza o marker
