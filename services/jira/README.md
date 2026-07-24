@@ -7,10 +7,13 @@
 > Antes de qualquer curl numa sessão já aberta:
 > `set -a; source ~/.config/claude-creds/secrets.env; set +a`
 > API v2 (Server/Data Center). `<KEY>` é a chave da issue (ex. `CTR-703`).
+> **TLS:** o servidor serve cadeia incompleta; se existir
+> `~/.config/nexxera/jira-ca-bundle.pem`, passe `--cacert` (como no `A=(…)` abaixo).
 
 ## Leitura
 ```bash
 A=(-u "$SSO_NEXXERA_LOGIN:$SSO_NEXXERA_PASS"); B="$JIRA_BASE_URL/rest/api/2"
+[ -f ~/.config/nexxera/jira-ca-bundle.pem ] && A+=(--cacert ~/.config/nexxera/jira-ca-bundle.pem)
 
 curl -s "${A[@]}" "$B/myself"                                  # usuário autenticado
 curl -s "${A[@]}" "$B/issue/<KEY>"                             # uma issue
